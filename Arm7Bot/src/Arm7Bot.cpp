@@ -26,6 +26,8 @@ Arm7Bot::Arm7Bot() {
 
   #if defined(__SAM3X8E__) || defined(__PIC32MX__)
     analogWriteResolution(12);
+  #elif defined ESP8266
+    analogWriteRange(4096); // 12-bit possible for ESP8266
   #endif
   
   // initalize elements
