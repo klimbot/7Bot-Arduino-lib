@@ -33,8 +33,8 @@ Arm7Bot::Arm7Bot() {
   // initalize elements
   btAndBuzInit();
   vacuumCupInit();
-  getStoreData();
-  setStoreData();
+  getStoreData();   //############### CHECK THIS FUNCTION
+  setStoreData();   //############### CHECK THIS FUNCTION
 }
 
 // Initial vacuum cup
@@ -84,11 +84,22 @@ void Arm7Bot::initialMove() {
     filterAnalogData();
   }
   calculatePosD();
-    
+
+#ifdef ESP8266
+  Servos[0].attach(0, 90, 2500);  // attach servo 0
+  Servos[0].attach(2, 90, 2500);  // attach servo 1
+  Servos[0].attach(14, 90, 2500);  // attach servo 2
+  Servos[0].attach(12, 90, 2500);  // attach servo 3
+  Servos[0].attach(13, 90, 2500);  // attach servo 4
+  Servos[0].attach(15, 90, 2500);  // attach servo 5
+#endif
+
   for (int i = 0; i < SERVO_NUM; i++) {
     pos[i] = posS[i] = posD[i]; // Set start position & current position to detected position
     posG[i] = INITIAL_POS[i]; // Set the goal locations to firmware defaults
+#ifndef ESP8266    
     Servos[i].attach( 2 + i, 90, 2500);  // attach servos
+#endif
     isConverge[i] = false;
   }
 

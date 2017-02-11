@@ -30,6 +30,11 @@
 const int BAUD_RATE = 115200;
 
 /* Serial port for communication */
+#ifdef ESP8266
+  #define ARMPORT Serial      // GPIO1(TX) GPIO3(RX)
+  #define DEBUGPORT Serial1   // ESP8266 has second UART port TX only GPIO2(TX)
+#endif
+
 #ifndef ARMPORT
   #define ARMPORT Serial1
 #endif
@@ -51,8 +56,14 @@ const double a=120.0, b=40.0, c=198.50, d=30.05, e=77.80, f=22.10, g=12.0, h = 2
 
 /* Btn & Buzzer */
 #define BUTTON_NUM 2
-const int button_pin[BUTTON_NUM] = {71, 70};
-const int buzzer_pin = 12;
+#ifdef __SAM3X8E__
+  const int button_pin[BUTTON_NUM] = {71, 70};
+  const int buzzer_pin = 12;
+#elif defined ESP8266
+  // not enough pins to go around...
+  const int button_pin[BUTTON_NUM] = {16, 16};
+  const int buzzer_pin = 5;
+#endif
 
 
 class Arm7Bot {
@@ -117,8 +128,15 @@ class Arm7Bot {
     // FSM_status3, playCnt
     int playCnt = 1;
     // Vaccum Cup
+
+#ifdef __SAM3X8E__
     int valve_pin = 10;
     int pump_pin = 11;
+#elif defined ESP8266
+    // not enough pins to go around...
+    int valve_pin = 4;
+    int pump_pin = 4;
+#endif
     int vacuumCupState = 0;  // 0-release, 1-grab
     void vacuumCupInit();
 
@@ -126,11 +144,11 @@ class Arm7Bot {
     int poseCnt = 0;
 
     // Flash read & writre
-    #ifdef __SAM3X8E__
+#ifdef __SAM3X8E__
       DueFlashStorage Storage;
-    #else
+#else
       #define Storage EEPROM
-    #endif
+#endif
 
     void getStoreData();
     void setStoreData();
