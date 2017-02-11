@@ -33,6 +33,9 @@ Arm7Bot::Arm7Bot() {
   // initalize elements
   btAndBuzInit();
   vacuumCupInit();
+#ifdef ESP8266
+  Storage.begin(512);
+#endif
   getStoreData();   //############### CHECK THIS FUNCTION
   setStoreData();   //############### CHECK THIS FUNCTION
 }
@@ -63,6 +66,9 @@ void Arm7Bot::getStoreData() {
 void Arm7Bot::setStoreData() {
   Storage.write(0, 7);  // 7Bot
   Storage.write(1, 10);  // Verion 1.0
+#ifdef ESP8266
+  Storage.commit();
+#endif
 }
 
 // Motion initial fuction.
@@ -86,12 +92,12 @@ void Arm7Bot::initialMove() {
   calculatePosD();
 
 #ifdef ESP8266
-  Servos[0].attach(0, 90, 2500);  // attach servo 0
-  Servos[0].attach(2, 90, 2500);  // attach servo 1
-  Servos[0].attach(14, 90, 2500);  // attach servo 2
-  Servos[0].attach(12, 90, 2500);  // attach servo 3
-  Servos[0].attach(13, 90, 2500);  // attach servo 4
-  Servos[0].attach(15, 90, 2500);  // attach servo 5
+  Servos[0].attach(14, 90, 2500);  // attach servo 0 to D5 on NodeMCU
+  Servos[0].attach(12, 90, 2500);  // attach servo 1 to D6 on NodeMCU 
+  Servos[0].attach(13, 90, 2500);  // attach servo 2 to D7 on NodeMCU
+  Servos[0].attach(15, 90, 2500);  // attach servo 3 to D8 on NodeMCU
+  Servos[0].attach(3, 90, 2500);  // attach servo 4 to D9 on NodeMCU
+  Servos[0].attach(1, 90, 2500);  // attach servo 5 to D10 on NodeMCU
 #endif
 
   for (int i = 0; i < SERVO_NUM; i++) {
@@ -632,6 +638,9 @@ void Arm7Bot::receiveCom() {
               dataBuf[0] = constrain(dataBuf[0], 0, 127);
               dataBuf[1] = constrain(dataBuf[1], 0, 127);
               Storage.write(dataBuf[0], (uint8_t)dataBuf[1]);
+#ifdef ESP8266
+              Storage.commit();
+#endif
             }
             break;
 
@@ -657,6 +666,9 @@ void Arm7Bot::receiveCom() {
               for (int i = 0; i < SERVO_NUM; i++) {
                 Storage.write(128 + i, (uint8_t)dataBuf[i]);
               }
+#ifdef ESP8266
+              Storage.commit();
+#endif
             }
             break;
 
@@ -1140,6 +1152,9 @@ void Arm7Bot::softwareSystem() {
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i, (uint8_t)(storeData[i] / 128));
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i + 1, (uint8_t)(storeData[i] % 128));
       }
+#ifdef ESP8266
+      Storage.commit();
+#endif
 
     } // END- add a normal pose
 
@@ -1168,7 +1183,10 @@ void Arm7Bot::softwareSystem() {
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i, (uint8_t)(storeData[i] / 128));
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i + 1, (uint8_t)(storeData[i] % 128));
       }
-
+#ifdef ESP8266
+      Storage.commit();
+#endif
+      
       digitalWrite(valve_pin, LOW);
       digitalWrite(pump_pin, HIGH);
       vacuumCupState = 1;
@@ -1202,6 +1220,9 @@ void Arm7Bot::softwareSystem() {
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i, (uint8_t)(storeData[i] / 128));
         Storage.write(256 + poseCnt * SERVO_NUM * 2 + 2 * i + 1, (uint8_t)(storeData[i] % 128));
       }
+#ifdef ESP8266
+      Storage.commit();
+#endif
 
       digitalWrite(valve_pin, HIGH);
       digitalWrite(pump_pin, LOW);
@@ -1216,6 +1237,9 @@ void Arm7Bot::softwareSystem() {
       poseCnt = 0;
       Storage.write(256, (uint8_t)poseCnt);
     }
+#ifdef ESP8266
+    Storage.commit();
+#endif
 
   }
   else if (FSM_Status == 3) {

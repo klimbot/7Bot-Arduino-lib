@@ -61,8 +61,8 @@ const double a=120.0, b=40.0, c=198.50, d=30.05, e=77.80, f=22.10, g=12.0, h = 2
   const int buzzer_pin = 12;
 #elif defined ESP8266
   // not enough pins to go around...
-  const int button_pin[BUTTON_NUM] = {16, 16};
-  const int buzzer_pin = 5;
+  const int button_pin[BUTTON_NUM] = {5, 4};   // D1, D2 on NodeMCU
+  const int buzzer_pin = BUILTIN_LED;          // D0 on NodeMCU tied to LED
 #endif
 
 
@@ -134,8 +134,8 @@ class Arm7Bot {
     int pump_pin = 11;
 #elif defined ESP8266
     // not enough pins to go around...
-    int valve_pin = 4;
-    int pump_pin = 4;
+    int valve_pin = 0;    // D3 on NodeMCU
+    int pump_pin = 2;     // D4 on NodeMCU
 #endif
     int vacuumCupState = 0;  // 0-release, 1-grab
     void vacuumCupInit();
