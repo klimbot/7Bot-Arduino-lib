@@ -24,15 +24,17 @@ Arm7Bot::Arm7Bot() {
     filterData[i] = 0;
   }
 
-  #if defined(__SAM3X8E__) || defined(__PIC32MX__)
-    analogWriteResolution(12);
-  #elif defined ESP8266
-    analogWriteRange(4096); // 12-bit possible for ESP8266
-  #endif
+#if defined(__SAM3X8E__) || defined(__PIC32MX__)
+  analogWriteResolution(12);
+#elif defined ESP8266
+  analogWriteRange(4096); // 12-bit possible for ESP8266
+#endif
   
   // initalize elements
   btAndBuzInit();
+#ifdef VACCUM_GRIPPER
   vacuumCupInit();
+#endif
 #ifdef ESP8266
   Storage.begin(512);
 #endif
@@ -41,12 +43,14 @@ Arm7Bot::Arm7Bot() {
 }
 
 // Initial vacuum cup
+#ifdef VACCUM_GRIPPER
 void Arm7Bot::vacuumCupInit() {
   pinMode(valve_pin, OUTPUT);
   pinMode(pump_pin, OUTPUT);
   digitalWrite(valve_pin, LOW);
   digitalWrite(pump_pin, LOW);
 }
+#endif
 
 // Read storage data from flash
 void Arm7Bot::getStoreData() {
@@ -92,12 +96,12 @@ void Arm7Bot::initialMove() {
   calculatePosD();
 
 #ifdef ESP8266
-  Servos[0].attach(14, 90, 2500);  // attach servo 0 to D5 on NodeMCU
-  Servos[0].attach(12, 90, 2500);  // attach servo 1 to D6 on NodeMCU 
-  Servos[0].attach(13, 90, 2500);  // attach servo 2 to D7 on NodeMCU
-  Servos[0].attach(15, 90, 2500);  // attach servo 3 to D8 on NodeMCU
-  Servos[0].attach(3, 90, 2500);  // attach servo 4 to D9 on NodeMCU
-  Servos[0].attach(1, 90, 2500);  // attach servo 5 to D10 on NodeMCU
+  Servos[0].attach(0, 90, 2500);  // attach servo 0 to D5 on NodeMCU
+  Servos[1].attach(2, 90, 2500);  // attach servo 1 to D6 on NodeMCU 
+  Servos[2].attach(14, 90, 2500);  // attach servo 2 to D7 on NodeMCU
+  Servos[3].attach(12, 90, 2500);  // attach servo 3 to D8 on NodeMCU
+  Servos[4].attach(13, 90, 2500);  // attach servo 4 to D9 on NodeMCU
+  Servos[5].attach(15, 90, 2500);  // attach servo 5 to D10 on NodeMCU
 #endif
 
   for (int i = 0; i < SERVO_NUM; i++) {
@@ -135,9 +139,18 @@ void Arm7Bot::servoMode(int mode) {
 
   // Re-attach servos if switching from forceless or stop modes.
   if (!Servos[0].attached()) {
+#ifdef ESP8266
+    Servos[0].attach(0, 90, 2500);  // attach servo 0 to D5 on NodeMCU
+    Servos[1].attach(2, 90, 2500);  // attach servo 1 to D6 on NodeMCU 
+    Servos[2].attach(14, 90, 2500);  // attach servo 2 to D7 on NodeMCU
+    Servos[3].attach(12, 90, 2500);  // attach servo 3 to D8 on NodeMCU
+    Servos[4].attach(13, 90, 2500);  // attach servo 4 to D9 on NodeMCU
+    Servos[5].attach(15, 90, 2500);  // attach servo 5 to D10 on NodeMCU
+#else
     for (int i = 0; i < SERVO_NUM; i++) {
       Servos[i].attach( 2 + i, 90, 2500);  // attach servos
     }
+#endif
     delay(100);    
 
     // Stop moving
@@ -502,7 +515,7 @@ PVector Arm7Bot::calcProjectionPt(PVector pt0, PVector pt1, PVector nVec) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* Invers Kinematics */
+/* Inverse Kinematics */
 
 // Function: IK, input Joint[5], calculate theta[0]~[2]
 // return: [0]no error; [1]out of valid range
@@ -1115,6 +1128,7 @@ void Arm7Bot::softwareSystem() {
         time_20ms = millis();
         moveOneStep();
         // Vacuum Cup
+#ifdef VACCUM_GRIPPER
         if (allConverge()) {
           if (posG[6] < 30) {
             digitalWrite(valve_pin, LOW);
@@ -1124,6 +1138,7 @@ void Arm7Bot::softwareSystem() {
             digitalWrite(pump_pin, LOW);
           }
         }
+#endif
       }
 
     }
@@ -1138,7 +1153,9 @@ void Arm7Bot::softwareSystem() {
       addPoseFlag = false;
       calculatePosD();
       // for vacuum cup
+#ifdef VACCUM_GRIPPER
       if (vacuumCupState == 1)   posD[6] = 0;
+#endif
       else posD[6] = 80;
       // count pose number: MaxNum = 254
       if (poseCnt < 254) poseCnt++; ARMPORT.print("AddRecPose: "); ARMPORT.println(poseCnt);
@@ -1186,11 +1203,11 @@ void Arm7Bot::softwareSystem() {
 #ifdef ESP8266
       Storage.commit();
 #endif
-      
+#ifdef VACCUM_GRIPPER
       digitalWrite(valve_pin, LOW);
       digitalWrite(pump_pin, HIGH);
       vacuumCupState = 1;
-
+#endif
     } // END- add a grab pose
 
 
@@ -1223,11 +1240,11 @@ void Arm7Bot::softwareSystem() {
 #ifdef ESP8266
       Storage.commit();
 #endif
-
+#ifdef VACCUM_GRIPPER
       digitalWrite(valve_pin, HIGH);
       digitalWrite(pump_pin, LOW);
       vacuumCupState = 0;
-
+#endif
     } // END- add a release pose
 
     // clear the poses
@@ -1276,6 +1293,7 @@ void Arm7Bot::softwareSystem() {
       if (poseCnt != 0) {
         moveOneStep();
         // vacuum cup
+#ifdef VACCUM_GRIPPER
         if (allConverge()) {
           if (posG[6] < 30) {
             digitalWrite(valve_pin, LOW);
@@ -1285,6 +1303,7 @@ void Arm7Bot::softwareSystem() {
             digitalWrite(pump_pin, LOW);
           }
         }
+#endif
       }
     }
 

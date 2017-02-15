@@ -15,6 +15,7 @@
 
 #include <Arduino.h>
 #include <Servo.h>
+//#include <esp8266/Servo.h>
 
 #ifdef __SAM3X8E__
   #include <DueFlashStorage.h>
@@ -42,6 +43,10 @@ const int BAUD_RATE = 115200;
   #define DEBUGPORT Serial
 #endif
 
+/* Definitions for type of robot gripper*/
+#define VACCUM_GRIPPER
+//#define CLAW_GRIPPER
+
 /* Arm7Bot parameters */
 #define SERVO_NUM 7
 const PVector INITIAL_COORDS_J5= {0.0, 178.0, 216.0};
@@ -61,7 +66,7 @@ const double a=120.0, b=40.0, c=198.50, d=30.05, e=77.80, f=22.10, g=12.0, h = 2
   const int buzzer_pin = 12;
 #elif defined ESP8266
   // not enough pins to go around...
-  const int button_pin[BUTTON_NUM] = {5, 4};   // D1, D2 on NodeMCU
+  const int button_pin[BUTTON_NUM] = {5, 5};   // D1, D1 on NodeMCU
   const int buzzer_pin = BUILTIN_LED;          // D0 on NodeMCU tied to LED
 #endif
 
@@ -129,16 +134,19 @@ class Arm7Bot {
     int playCnt = 1;
     // Vaccum Cup
 
+    
+#ifdef VACCUM_GRIPPER
 #ifdef __SAM3X8E__
     int valve_pin = 10;
     int pump_pin = 11;
 #elif defined ESP8266
     // not enough pins to go around...
-    int valve_pin = 0;    // D3 on NodeMCU
-    int pump_pin = 2;     // D4 on NodeMCU
+    int valve_pin = 4;    // D2 on NodeMCU
+    int pump_pin = 4;     // D2 on NodeMCU
 #endif
     int vacuumCupState = 0;  // 0-release, 1-grab
     void vacuumCupInit();
+#endif
 
     // Hardware pose record
     int poseCnt = 0;
