@@ -95,19 +95,12 @@ void Arm7Bot::initialMove() {
   }
   calculatePosD();
 
-#ifdef ESP8266
-  Servos[0].attach(0, 90, 2500);  // attach servo 0 to D5 on NodeMCU
-  Servos[1].attach(2, 90, 2500);  // attach servo 1 to D6 on NodeMCU 
-  Servos[2].attach(14, 90, 2500);  // attach servo 2 to D7 on NodeMCU
-  Servos[3].attach(12, 90, 2500);  // attach servo 3 to D8 on NodeMCU
-  Servos[4].attach(13, 90, 2500);  // attach servo 4 to D9 on NodeMCU
-  Servos[5].attach(15, 90, 2500);  // attach servo 5 to D10 on NodeMCU
-#endif
-
   for (int i = 0; i < SERVO_NUM; i++) {
     pos[i] = posS[i] = posD[i]; // Set start position & current position to detected position
     posG[i] = INITIAL_POS[i]; // Set the goal locations to firmware defaults
-#ifndef ESP8266    
+#ifdef ESP8266
+    Servos[i].attach( servoAxisPins[i], 90, 2500);  // attach servos
+#else
     Servos[i].attach( 2 + i, 90, 2500);  // attach servos
 #endif
     isConverge[i] = false;
@@ -205,6 +198,7 @@ void Arm7Bot::move(double angles[SERVO_NUM]) {
   }
 
   // Compatible with vaccum cap
+#ifdef VACCUM_GRIPPER
   if (posG[6] < 30) {
     digitalWrite(valve_pin, LOW);
     digitalWrite(pump_pin, HIGH);
@@ -213,6 +207,7 @@ void Arm7Bot::move(double angles[SERVO_NUM]) {
     digitalWrite(valve_pin, HIGH);
     digitalWrite(pump_pin, LOW);
   }
+#endif
   
 }
 
@@ -1155,8 +1150,8 @@ void Arm7Bot::softwareSystem() {
       // for vacuum cup
 #ifdef VACCUM_GRIPPER
       if (vacuumCupState == 1)   posD[6] = 0;
-#endif
       else posD[6] = 80;
+#endif
       // count pose number: MaxNum = 254
       if (poseCnt < 254) poseCnt++; ARMPORT.print("AddRecPose: "); ARMPORT.println(poseCnt);
       Storage.write(256, (uint8_t)poseCnt);
@@ -1315,7 +1310,6 @@ void Arm7Bot::softwareSystem() {
     if (pre_FSM_Status != 4) stopMode();
 
   }
-  
   
   pre_FSM_Status = FSM_Status;
 

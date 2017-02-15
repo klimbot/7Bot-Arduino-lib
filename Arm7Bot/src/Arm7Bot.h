@@ -44,7 +44,7 @@ const int BAUD_RATE = 115200;
 #endif
 
 /* Definitions for type of robot gripper*/
-#define VACCUM_GRIPPER
+//#define VACCUM_GRIPPER
 //#define CLAW_GRIPPER
 
 /* Arm7Bot parameters */
@@ -58,15 +58,25 @@ const double offsetInit[SERVO_NUM] = {0, 0, 0, 0, 0, 0, -50.0};  // Unit: Degree
 const double thetaMin[SERVO_NUM] = { 0,  0, -1.134464,  0.17453292,  0,  0, 0};
 const double thetaMax[SERVO_NUM] = {PI, PI, 2.0071287, 2.9670596, PI, PI, PI/2};
 const double a=120.0, b=40.0, c=198.50, d=30.05, e=77.80, f=22.10, g=12.0, h = 29.42;
+#ifdef ESP8266
+const int servoAxisPins[SERVO_NUM] = {5, 4, 2, 14,12,13,15};
+//                                    D1 D2 D4 D5 D6 D7 D8
+#endif
+
 
 /* Btn & Buzzer */
+#ifdef ESP8266
+#define BUTTON_NUM 1
+#else
 #define BUTTON_NUM 2
+#endif
+
 #ifdef __SAM3X8E__
   const int button_pin[BUTTON_NUM] = {71, 70};
   const int buzzer_pin = 12;
 #elif defined ESP8266
   // not enough pins to go around...
-  const int button_pin[BUTTON_NUM] = {5, 5};   // D1, D1 on NodeMCU
+  const int button_pin[BUTTON_NUM] = {0};      // D3 on NodeMCU
   const int buzzer_pin = BUILTIN_LED;          // D0 on NodeMCU tied to LED
 #endif
 
@@ -91,7 +101,11 @@ class Arm7Bot {
     unsigned long time_300ms = 0;
     bool last_reading[BUTTON_NUM];
     bool reading[BUTTON_NUM];
+#ifdef ESP8266
+    unsigned long last_debounce_time[BUTTON_NUM] = {0};
+#else
     unsigned long last_debounce_time[BUTTON_NUM] = {0, 0};
+#endif
     unsigned long debounce_delay = 50;
     // button state buffers
     bool last_state[BUTTON_NUM];
